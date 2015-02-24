@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150219012226) do
+ActiveRecord::Schema.define(version: 20150224223055) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -44,6 +44,26 @@ ActiveRecord::Schema.define(version: 20150219012226) do
 
   add_index "approvals", ["project_id"], name: "index_approvals_on_project_id", using: :btree
   add_index "approvals", ["staff_id"], name: "index_approvals_on_staff_id", using: :btree
+
+  create_table "bundled_products", force: true do |t|
+    t.integer  "bundle_id"
+    t.integer  "product_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "bundled_products", ["bundle_id"], name: "index_bundled_products_on_bundle_id", using: :btree
+  add_index "bundled_products", ["product_id"], name: "index_bundled_products_on_product_id", using: :btree
+
+  create_table "bundles", force: true do |t|
+    t.string   "name"
+    t.text     "description"
+    t.string   "img"
+    t.datetime "active_at"
+    t.datetime "deleted_at"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "carts", force: true do |t|
     t.integer  "count"
