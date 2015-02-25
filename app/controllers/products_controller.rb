@@ -12,7 +12,7 @@ class ProductsController < ApplicationController
   param :page, :number, required: false
   param :per_page, :number, required: false
   param :active, :bool, required: false
-  param :includes, Array, required: false, in: %w(chargebacks cloud product_type answers)
+  param :includes, Array, required: false, in: %w(chargebacks product_type answers)
 
   def index
     authorize Product
@@ -21,7 +21,7 @@ class ProductsController < ApplicationController
 
   api :GET, '/products/:id', 'Shows product with :id'
   param :id, :number, required: true
-  param :includes, Array, required: false, in: %w(chargebacks cloud product_type answers)
+  param :includes, Array, required: false, in: %w(chargebacks product_type answers)
   error code: 404, desc: MissingRecordDetection::Messages.not_found
 
   def show
@@ -32,11 +32,11 @@ class ProductsController < ApplicationController
   api :POST, '/products', 'Creates product'
   param :name, String, desc: 'Product Name'
   param :description, String, desc: 'Short description'
-  param :service_catalog_id, Integer, desc: 'ManageIQ Catalog Id'
-  param :service_type_id, Integer, desc: 'ManageIQ Catalog Item Id'
-  param :chef_role, String, desc: 'Chef role'
-  param :product_type_id, Integer, desc: 'ProductType Id'
-  param :cloud_id, Integer, desc: 'Cloud Id'
+#  param :service_catalog_id, Integer, desc: 'ManageIQ Catalog Id'
+#  param :service_type_id, Integer, desc: 'ManageIQ Catalog Item Id'
+#  param :chef_role, String, desc: 'Chef role'
+#  param :product_type_id, Integer, desc: 'ProductType Id'
+#  param :cloud_id, Integer, desc: 'Cloud Id'
   param :options, Array, desc: 'Options', allow_nil: true
   param :hourly_price, PRODUCT_PRICE_REGEX, required: false, desc: 'Cost per Hour'
   param :monthly_price, PRODUCT_PRICE_REGEX, required: false, desc: 'Cost per Month'
@@ -54,11 +54,11 @@ class ProductsController < ApplicationController
   param :id, :number, required: true
   param :name, String, desc: 'Product Name'
   param :description, String, desc: 'Short description'
-  param :service_catalog_id, Integer, desc: 'ManageIQ Catalog Id'
-  param :service_type_id, Integer, desc: 'ManageIQ Catalog Item Id'
-  param :chef_role, String, desc: 'Chef role'
-  param :product_type_id, Integer, desc: 'ProductType Id'
-  param :cloud_id, Integer, desc: 'Cloud Id'
+#  param :service_catalog_id, Integer, desc: 'ManageIQ Catalog Id'
+#  param :service_type_id, Integer, desc: 'ManageIQ Catalog Item Id'
+#  param :chef_role, String, desc: 'Chef role'
+#  param :product_type_id, Integer, desc: 'ProductType Id'
+#  param :cloud_id, Integer, desc: 'Cloud Id'
   param :active, :bool, desc: 'Product is active and available in the marketplace'
   param :options, Array, desc: 'options', allow_nil: true
   param :hourly_price, PRODUCT_PRICE_REGEX, required: false, desc: 'Cost per Hour'
@@ -91,7 +91,22 @@ class ProductsController < ApplicationController
   private
 
   def load_product_params
-    @products_params = params.permit(:name, :description, :service_type_id, :service_catalog_id, :chef_role, :product_type_id, :cloud_id, :img, :active, :hourly_price, :monthly_price, :setup_price, options: [], answers: [:product_id, :product_type_id, :product_type_question_id, :answer, :id])
+    @products_params = params.permit(
+      :name,
+      :description,
+#      :service_type_id,
+#      :service_catalog_id,
+#      :chef_role,
+#      :product_type_id,
+#      :cloud_id,
+      :img,
+      :active,
+      :hourly_price,
+      :monthly_price,
+      :setup_price,
+#      options: [],
+      answers: [:product_id, :product_type_id, :product_type_question_id, :answer, :id]
+    )
     # Position the nested answers into a place where they can be handled as nested_attributes
     @products_params.tap do |products|
       products[:answers_attributes] = products.delete(:answers) if products.key?(:answers)

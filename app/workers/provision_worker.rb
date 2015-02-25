@@ -29,12 +29,16 @@ class ProvisionWorker
     @miq_user ||= Staff.find_by email: miq_settings[:email]
   end
 
+  def service_type_id
+    order_item.product.provisionable.service_type_id
+  end
+
   def miq_provision
     message =
       {
         action: 'order',
         resource: {
-          href: "#{miq_settings[:url]}/api/service_templates/#{order_item.product.service_type_id}",
+          href: "#{miq_settings[:url]}/api/service_templates/#{service_type_id}",
           referer: ENV['DEFAULT_URL'], # TODO: Move this into a manageiq setting
           email: miq_user.email,
           token: miq_settings[:token],
@@ -46,8 +50,8 @@ class ProvisionWorker
         }
       }
     order_item.provision_status = :unknown
-    order_item.payload_to_miq = message.to_json
-    order_item.save
+    order_item.begin_provisioning_payload = message.to_json
+    order_item.save!
 
     # TODO: verify_ssl needs to be changed, this is the only way I could get it to work in development.
     resource = RestClient::Resource.new(
@@ -61,12 +65,16 @@ class ProvisionWorker
     handle_response resource, message
   end
 
+  def service_catalog_id
+    order_item.product.provisionable.service_catalog_id
+  end
+
   def handle_response(resource, message)
-    response = resource["api/service_catalogs/#{order_item.product.service_catalog_id}/service_templates"].post message.to_json, content_type: 'application/json'
+    response = resource["api/service_catalogs/#{service_catalog_id}/service_templates"].post message.to_json, content_type: 'application/json'
 
     begin
-      data = ActiveSupport::JSON.decode(response)
-      order_item.payload_reply_from_miq = data.to_json
+      data = ActiveSupport::JSON.decode(response.body)
+      order_item.reply_from_provisioning_payload = data.to_json
 
       case response.code
       when 200..299
@@ -86,9 +94,9 @@ class ProvisionWorker
       }.to_json
 
       # Since the exception was caught delayed_jobs wouldn't requeue the job, let's raise an exception
-      raise 'error'
+      raise e
     ensure
-      order_item.save
+      order_item.save!
     end
 
     order_item.to_json
